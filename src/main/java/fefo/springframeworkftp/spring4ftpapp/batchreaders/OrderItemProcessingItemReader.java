@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 
-public class OrderItemProcessingItemReader implements ItemReader<Order>, ItemStream{
+public class OrderItemProcessingItemReader extends SingleItemPeekableItemReader<Order>{
 
     private static final Logger LOG = getLogger(OrderItemProcessingItemReader.class);
 
@@ -25,7 +25,7 @@ public class OrderItemProcessingItemReader implements ItemReader<Order>, ItemStr
 
 
     private FlatFileItemReader fieldSetReader;
-    SingleItemPeekableItemReader<Order> reader = new SingleItemPeekableItemReaderBuilder<>().delegate(getFieldSetReader()).build();
+   // SingleItemPeekableItemReader<Order> reader = new SingleItemPeekableItemReaderBuilder<>().delegate(getFieldSetReader()).build();
 
     private String filePath;
 
