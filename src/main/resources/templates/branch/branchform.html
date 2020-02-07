@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Branch Details</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+</head>
+<body>
+
+<div th:replace = "fragments/topnav :: navbar"></div>
+
+<div class="container-fluid" style="margin-top: 20px">
+
+    <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+
+                    <form class="form-horizontal" th:object="${branchForm}" th:action="@{/branch/branchform}" method="post">
+
+                        <div class="card-group">
+                            <div class="card border-dark mb-3">
+                                <div class="card-header bg-dark text-white">
+                                    <h1>Enter Branch Detail</h1>
+                                </div>
+
+                                <div class="card-body">
+                                    <div class="row">
+                                            <div class="col-md-3 form-group" th:class="${#fields.hasErrors('branchCode')} ? 'col-md-5 form-group has-error' : 'col-md-3 form-group'">
+                                                <label>Branch Code:</label>
+                                                    <input type="text" class="form-control" th:field="*{branchCode}" th:errorclass="has-error" placeholder="Branch Code BBB"/>
+                                                    <span class="help-block" > <!--th:if="${#fields.hasErrors('branchCode')}-->
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('branchCode')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+
+                                    <div class="row">
+                                            <div class="col-md-3 form-group" th:class="${#fields.hasErrors('usern')} ? 'col-md-5 form-group has-error' : 'col-md-3 form-group'">
+                                                <label>User Name:</label>
+                                                    <input type="text" class="form-control" th:field="*{usern}" th:errorclass="has-error" placeholder="ftp-bbb"/>
+                                                    <span class="help-block">
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('usern')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+                                    <div class="row">
+                                            <div class="col-md-3 form-group" th:class="${#fields.hasErrors('password')} ? 'col-md-5 form-group has-error' : 'col-md-3 form-group'">
+                                                <label>Password:</label>
+                                                    <input type="password" min="0" max="5000" step="0.01" class="form-control" th:field="*{password}" th:errorclass="has-error"/>
+                                                    <span class="help-block">
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('password')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+                                    <div class="row">
+                                            <div class="col-md-6 form-group" th:class="${#fields.hasErrors('host')} ? 'col-md-6 form-group has-error' : 'col-md-6 form-group'">
+                                                <label>Host:</label>
+                                                    <input type="text" class="form-control" th:field="*{host}" th:errorclass="has-error" placeholder="bbb-notes-fs.bbb.ei or bbb-fs.bbb.ei"/>
+                                                    <span class="help-block">
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('host')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+                                    <div class="row">
+                                            <div class="col-md-2 form-group" th:class="${#fields.hasErrors('ftpPort')} ? 'col-md-5 form-group has-error' : 'col-md-2 form-group'">
+                                                <label>Port:</label>
+                                                    <input type="text" min="0" max="5000" step="0.01" class="form-control" th:field="*{ftpPort}" th:errorclass="has-error" placeholder="Should be 21"/>
+                                                    <span class="help-block">
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('ftpPort')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+                                    <div class="row">
+                                            <div class="col-md-7 form-group" th:class="${#fields.hasErrors('folderPath')} ? 'col-md-7 form-group has-error' : 'col-md-7 form-group'">
+                                                <label>Path:</label>
+                                                    <input type="text" class="form-control" th:field="*{folderPath}" placeholder="/FTP/ERBRANCH/EDMS/FEFO" th:errorclass="has-error"/>
+                                                    <span class="help-block">
+                                                       <ul>
+                                                           <li style="color:red;font-size:13px" th:each="err : ${#fields.errors('folderPath')}" th:text="${err}" />
+                                                       </ul>
+                                                    </span>
+                                            </div>
+                                    </div>
+                                   <!-- <div class="row">
+                                            <div class="container">
+                                                <button type="submit" class="btn btn-default">Save <i class='fas fa-save'></i></button>
+                                                <button type="reset" class="btn btn-default">Reset</button>
+                                                &lt;!&ndash;<a href="/branch/list" id="cancel" name="cancel" class="btn btn-default">Cancel</a>&ndash;&gt;
+                                                <button type="cancel" onclick="javascript:window.location='/branch/list';return false;" class="btn btn-default">Cancel</button>
+                                            </div>
+                                    </div>-->
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container">
+                            <button type="submit" class="btn btn-primary">Submit <i class='fas fa-save'></i></button>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <!--<a href="/branch/list" id="cancel" name="cancel" class="btn btn-default">Cancel</a>-->
+                            <button type="cancel" onclick="javascript:window.location='/branch/list';return false;" class="btn btn-danger">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+</body>
+</html>

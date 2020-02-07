@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Branch Details</title>
+
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+</head>
+<body class="page-container-bg-solid">
+<div th:replace = "fragments/topnav :: navbar"></div>
+
+<div class="page-container">
+    <div class="page-content-wrapper">
+        <div class="page-head" style="padding-top:40px">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6 ">
+                        <div class="portlet box blue">
+                            <div class="portlet-title">
+                                <div class="caption">
+                                    <i class="material-icons"></i>
+                                    <span class="caption-subject" style="position:relative;top:2px">Branch Details Form</span>
+                                </div>
+                            </div>
+                            <div class="portlet-body form">
+                                <form id="branchForm" class="form-horizontal" th:object="${branchForm}" th:action="@{/branch/branchform}" method="POST">
+                                    <div class="form-body">
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('branchCode')} ? has-error : ''">
+                                            <label>Branch Code</label>
+                                            <div th:classappend="${#fields.hasErrors('branchCode')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('branchCode')}" class="fa fa-exclamation tooltips" data-original-title="please enter a valid branch code" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="32" th:field="*{branchCode}" placeholder="Branch Code BBB"/>
+                                                <span th:if="${#fields.hasErrors('branchCode')}" class="help-block" th:errors="*{branchCode}"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('usern')} ? has-error : ''">
+                                            <label>User Name</label>
+                                            <div th:classappend="${#fields.hasErrors('usern')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('usern')}" class="fa fa-exclamation tooltips" data-original-title="please enter a valid user name" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="32" th:field="*{usern}" placeholder="ftp-bbb"/>
+                                                <span th:if="${#fields.hasErrors('usern')}" class="help-block" th:errors="*{usern}"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('password')} ? has-error : ''">
+                                            <label>Password</label>
+                                            <div th:classappend="${#fields.hasErrors('password')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('password')}" class="fa fa-exclamation tooltips" data-original-title="please enter a valid password" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="11" th:field="*{password}" placeholder="Be sure to include dashes"/>
+                                                <span th:if="${#fields.hasErrors('password')}" class="help-block" th:errors="*{password}"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('host')} ? has-error : ''">
+                                            <label>Host</label>
+                                            <div th:classappend="${#fields.hasErrors('host')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('host')}" class="fa fa-exclamation tooltips" data-original-title="please enter a valid host" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="64" th:field="*{host}" placeholder="bbb-notes-fs.bbb.ei or bbb-fs.bbb.ei"/>
+                                                <span th:if="${#fields.hasErrors('host')}" class="help-block" th:errors="*{host}"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('ftpPort')} ? has-error : ''">
+                                            <label>Port</label>
+                                            <div th:classappend="${#fields.hasErrors('ftpPort')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('ftpPort')}" class="fa fa-exclamation tooltips" data-original-title="please enter a valid number port" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="2" th:field="*{ftpPort}" placeholder="Should be 21"/>
+                                                <span th:if="${#fields.hasErrors('ftpPort')}" class="help-block" th:errors="*{ftpPort}"></span>
+                                            </div>
+                                        </div>
+                                        <div class="form-group" th:classappend="${#fields.hasErrors('folderPath')} ? has-error : ''">
+                                            <label>Port</label>
+                                            <div th:classappend="${#fields.hasErrors('folderPath')} ? 'input-icon right' : ''">
+                                                <i th:if="${#fields.hasErrors('folderPath')}" class="fa fa-exclamation tooltips" data-original-title="please enter a sequence of folder(s)" data-container="body"></i>
+                                                <input type="text" class="form-control" maxlength="2" th:field="*{folderPath}" placeholder="/ftp/erbranch/EDMS/FEFO"/>
+                                                <span th:if="${#fields.hasErrors('folderPath')}" class="help-block" th:errors="*{folderPath}"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container">
+                                        <button type="submit" class="btn btn-primary">Submit <i class='fas fa-save'></i></button>
+                                        <button type="reset" class="btn btn-default">Reset</button>
+                                        <!--<a href="/branch/list" id="cancel" name="cancel" class="btn btn-default">Cancel</a>-->
+                                        <button type="cancel" onclick="javascript:window.location='/branch/list';return false;" class="btn btn-default">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

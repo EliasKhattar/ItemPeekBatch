@@ -1,0 +1,342 @@
+package fefo.springframeworkftp.spring4ftpapp.configuration;
+
+import fefo.springframeworkftp.spring4ftpapp.csvprocessing.CSVToCSVNoQ;
+import fefo.springframeworkftp.spring4ftpapp.model.Branch;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
+import fefo.springframeworkftp.spring4ftpapp.repository.BranchRepository;
+import org.aopalliance.aop.Advice;
+import org.apache.commons.net.ftp.FTPFile;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.integration.channel.DirectChannel;
+import org.springframework.integration.config.EnableIntegration;
+import org.springframework.integration.dsl.IntegrationFlow;
+import org.springframework.integration.dsl.IntegrationFlows;
+import org.springframework.integration.dsl.Pollers;
+import org.springframework.integration.dsl.SourcePollingChannelAdapterSpec;
+import org.springframework.integration.file.dsl.Files;
+import org.springframework.integration.file.filters.*;
+import org.springframework.integration.file.remote.session.*;
+import org.springframework.integration.file.support.FileExistsMode;
+import org.springframework.integration.ftp.dsl.Ftp;
+import org.springframework.integration.ftp.dsl.FtpInboundChannelAdapterSpec;
+import org.springframework.integration.ftp.session.DefaultFtpSessionFactory;
+import org.springframework.integration.handler.advice.ExpressionEvaluatingRequestHandlerAdvice;
+import org.springframework.integration.jdbc.metadata.JdbcMetadataStore;
+
+import org.springframework.integration.metadata.ConcurrentMetadataStore;
+import org.springframework.integration.scheduling.PollerMetadata;
+
+import org.springframework.messaging.MessageChannel;
+
+import javax.sql.DataSource;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.function.Consumer;
+
+@Configuration
+@EnableIntegration
+@ComponentScan
+public class FTPIntegration {
+
+    public static final String TIMEZONE_UTC = "UTC";
+    public static final String TIMESTAMP_FORMAT_OF_FILES = "yyyyMMddHHmmssSSS";
+    public static final String TEMPORARY_FILE_SUFFIX = ".part";
+    public static final int POLLER_FIXED_PERIOD_DELAY = 5000;
+    public static final int MAX_MESSAGES_PER_POLL = 100;
+
+    private DataSource dataSource;
+
+    //private static final Logger LOG = LoggerFactory.getLogger(FTPIntegration.class);
+    private static final Logger LOG1 = Logger.getLogger(FTPIntegration.class);
+    private static final String CHANNEL_INTERMEDIATE_STAGE = "intermediateChannel";
+
+    private static final String OUTBOUND_CHANNEL = "outboundChannel";
+
+    @Autowired
+    private CSVToCSVNoQ csvToCSVNoQ;
+
+    public FTPIntegration() {
+    }
+
+    @Autowired
+    BranchRepository branchRepository;
+
+    Map<Object, SessionFactory<FTPFile>> factories = new HashMap<>();
+    DefaultSessionFactoryLocator<FTPFile> defaultSessionFactoryLocator = new DefaultSessionFactoryLocator<FTPFile>(factories);
+
+    @Bean
+    public Branch myBranch() {
+        return new Branch();
+    }
+
+    /**
+     * The default poller with 5s, 100 messages , will poll the FTP folder location
+     *
+     * @return default poller.
+     */
+    @Bean(name = PollerMetadata.DEFAULT_POLLER)
+    public PollerMetadata poller() {
+        return Pollers
+                .fixedDelay(POLLER_FIXED_PERIOD_DELAY)
+                .maxMessagesPerPoll(MAX_MESSAGES_PER_POLL)
+                .transactional()
+                .get();
+    }
+
+    /**
+     * The direct channel for the flow.
+     *
+     * @return MessageChannel
+     */
+    @Bean
+    public MessageChannel stockIntermediateChannel() {
+        return new DirectChannel();
+    }
+
+    /**
+     * Get the files from a remote directory. Add a timestamp to the filename
+     * and write them to a local temporary folder.
+     *
+     * @return IntegrationFlow
+     */
+
+    /**
+     * Method that creates a flow to read from FTP server the csv file
+     * and transform it to a local folder with the name branch.
+     *
+     * @return IntegrationFlow
+     */
+    public IntegrationFlow fileInboundFlowFromFTPServer(Branch myBranch) throws IOException {
+
+        final FtpInboundChannelAdapterSpec sourceSpecFtp = Ftp.inboundAdapter(createNewFtpSessionFactory(myBranch))
+                .preserveTimestamp(true)
+                //.patternFilter("*.csv")
+                .maxFetchSize(MAX_MESSAGES_PER_POLL)
+                .remoteDirectory(myBranch.getFolderPath())
+                .regexFilter("FEFOexport" + myBranch.getBranchCode() + ".csv")
+                .deleteRemoteFiles(true)
+                .localDirectory(new File(myBranch.getBranchCode()))
+                .temporaryFileSuffix(TEMPORARY_FILE_SUFFIX);
+
+
+               /* .localFilenameExpression(new FunctionExpression<String>(s -> {
+                    final int fileTypeSepPos = s.lastIndexOf('.');
+                    return DateTimeFormatter
+                            .ofPattern(TIMESTAMP_FORMAT_OF_FILES)
+                            .withZone(ZoneId.of(TIMEZONE_UTC))
+                            .format(Instant.now())
+                            + "_"
+                            + s.substring(0,fileTypeSepPos)
+                            + s.substring(fileTypeSepPos);
+                }));*/
+
+        // Poller definition
+        final Consumer<SourcePollingChannelAdapterSpec> stockInboundPoller = endpointConfigurer -> endpointConfigurer
+                .id("stockInboundPoller")
+                .autoStartup(true)
+                .poller(poller());
+
+        IntegrationFlow flow = IntegrationFlows
+                .from(sourceSpecFtp, stockInboundPoller)
+
+                .transform(File.class, p -> {
+                    // log step
+                    LOG1.info("flow=stockInboundFlowFromAFT, message=incoming file: " + p);
+                    return p;
+                })
+                .handle(m -> {
+                    try {/* Invoking a method through the integration flow that reads a csv file and transform it to a new format that should be sent to FTP */
+                        this.csvToCSVNoQ.writeCSVfinal("test", myBranch.getBranchCode() + "/final" + myBranch.getBranchCode() + ".csv", myBranch.getBranchCode() + "/FEFOexport" + myBranch.getBranchCode() + ".csv");
+                        LOG1.info("Writing final file .csv " + m);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                })
+                .get();
+
+        return flow;
+    }
+
+    /*
+    * Creating the outbound adaptor to send files from local to FTP server
+    *
+    * */
+
+    public IntegrationFlow localToFtpFlow(Branch myBranch) {
+
+        return IntegrationFlows.from(Files.inboundAdapter(new File(myBranch.getBranchCode()))
+                        .filter(new ChainFileListFilter<File>()
+                                .addFilter(new RegexPatternFileListFilter("final" + myBranch.getBranchCode() + ".csv"))
+                                .addFilter(new FileSystemPersistentAcceptOnceFileListFilter(metadataStore(dataSource), "foo"))),//FileSystemPersistentAcceptOnceFileListFilter
+                e -> e.poller(Pollers.fixedDelay(10_000)))
+                .enrichHeaders(h ->h.headerExpression("file_originalFile", "new java.io.File('"+ myBranch.getBranchCode() +"/FEFOexport" + myBranch.getBranchCode() + ".csv')",true))
+                .transform(p -> {
+                    LOG1.info("Sending file " + p + " to FTP branch " + myBranch.getBranchCode());
+                    return p;
+                })
+
+                .log()
+                .transform(m -> {
+                            this.defaultSessionFactoryLocator.addSessionFactory(myBranch.getBranchCode(),createNewFtpSessionFactory(myBranch));
+                            LOG1.info("Adding factory to delegation");
+                            return m;
+                })
+
+               /* .transform(m -> {
+                    this.defaultSessionFactoryLocator.addSessionFactory(myBranch.getBranchCode(),createNewFtpSessionFactory(myBranch));
+                    LOG1.info("Adding factory to delegation");
+                    return m;
+                })*/
+                .handle(Ftp.outboundAdapter(createNewFtpSessionFactory(myBranch), FileExistsMode.REPLACE)
+
+                        .useTemporaryFileName(true)
+                        .autoCreateDirectory(false)
+                        .remoteDirectory(myBranch.getFolderPath()), e -> e.advice(expressionAdvice()))
+
+                .get();
+    }
+
+    /**
+    * Creating the advice for routing the payload of the outbound message on different expressions (success, failure)
+    * @return Advice
+    */
+
+    @Bean
+    public Advice expressionAdvice() {
+        ExpressionEvaluatingRequestHandlerAdvice advice = new ExpressionEvaluatingRequestHandlerAdvice();
+        advice.setSuccessChannelName("success.input");
+        advice.setOnSuccessExpressionString("payload.delete() + ' was successful'");
+        //advice.setOnSuccessExpressionString("inputMessage.headers['file_originalFile'].renameTo(new java.io.File(payload.absolutePath + '.success.to.send'))");
+        //advice.setFailureChannelName("failure.input");
+        advice.setOnFailureExpressionString("payload + ' was bad, with reason: ' + #exception.cause.message");
+        advice.setTrapException(true);
+        return advice;
+    }
+
+    /*
+    * Creating FTP connection based on the branch ftp data entered.
+    * */
+
+    public DefaultFtpSessionFactory createNewFtpSessionFactory(Branch branch) {
+        final DefaultFtpSessionFactory factory = new DefaultFtpSessionFactory();
+        factory.setHost(branch.getHost());
+        factory.setUsername(branch.getUsern());
+        factory.setPort(branch.getFtpPort());
+        factory.setPassword(branch.getPassword());
+        return factory;
+    }
+
+    @Bean
+    public SessionFactory<FTPFile> createNewFtpSessionFactory() {
+        final DefaultFtpSessionFactory factory = new DefaultFtpSessionFactory();
+        factory.setHost("bey-notes-fs.bey.ei");
+        factory.setUsername("bey-ftp");
+        factory.setPort(21);
+        factory.setPassword("spicysilk");
+        return factory;
+    }
+
+    /*
+    * Creating a metadata store to be used across the application flows to prevent reprocessing the file if it is already processed.
+    * This will save the new file in a metadata table in the DB with the state of the report, so when a new copy comes with different date it will be processed only.
+    * */
+    @Bean
+    public ConcurrentMetadataStore metadataStore(final DataSource dataSource) {
+        return new JdbcMetadataStore(dataSource);
+    }
+
+    /*
+    * Success channel that will handle the AdviceMessage from the outbound adapter and sends the inputMessage file_originalFile to FTP destination folder specified.
+    *
+    * */
+
+
+   /*@Bean
+    public IntegrationFlow success(){
+        return f -> f.transform("inputMessage.headers['file_originalFile']")
+                     .handle(Ftp.outboundAdapter(createNewFtpSessionFactory(), FileExistsMode.REPLACE)
+                     .useTemporaryFileName(true)
+                     .autoCreateDirectory(true)
+                     .remoteDirectory("/ftp/erbranch/EDMS/FEFO/History/")
+
+                     .get());
+
+               //f.handle(System.out::println);
+    }*/
+
+
+    @Bean
+    public IntegrationFlow success(){
+        return f -> f.transform("inputMessage.headers['file_originalFile']")
+                .transform(e -> {
+                    //getting the Branch code from the Input message and calling the correct factory based on it
+                    delegatingSessionFactoryAuto().setThreadKey(e.toString().substring(0,3));
+                    return e;
+                })
+                //.handle(Message.class,(m,h)-> delegatingSessionFactory().setThreadKey(m,"CAI"))
+                .handle(Ftp.outboundAdapter(delegatingSessionFactoryAuto(), FileExistsMode.REPLACE)
+                        .useTemporaryFileName(true)
+                        .autoCreateDirectory(true)
+                        .remoteDirectory("/ftp/erbranch/EDMS/FEFO/History/").get());
+    }
+
+    /*@Bean
+    public DelegatingSessionFactory delegatingSessionFactory(){
+        LOG1.info("Initializing Delegation factory");
+        //this.defaultSessionFactoryLocator.addSessionFactory("test",createNewFtpSessionFactory());
+        SessionFactoryLocator<FTPFile> sff = createNewFtpSessionFactoryAndAddItToTheLocator();
+        return new DelegatingSessionFactory<>(sff);
+    }*/
+
+
+  /*  @Bean
+    public DelegatingSessionFactory<FTPFile> delegatingSessionFactory(){
+
+        SessionFactoryLocator<FTPFile> sff = sessionFactoryLocator();
+        return new DelegatingSessionFactory<FTPFile>(sff);
+
+    }*/
+
+    @Bean
+    public DelegatingSessionFactory<FTPFile> delegatingSessionFactoryAuto(){
+
+        SessionFactoryLocator<FTPFile> sff = createNewFtpSessionFactoryAndAddItToTheLocator();
+        return new DelegatingSessionFactory<FTPFile>(sff);
+
+    }
+
+   /* @Bean
+    public SessionFactoryLocator<FTPFile> sessionFactoryLocator() {
+
+        final List<Branch> branchConnections = new ArrayList<>();
+        branchRepository.findAll().forEach(branchConnections::add);
+        final Map<Object, SessionFactory<FTPFile>> factories = new HashMap<>();
+        Branch b1 = new Branch((long) 5,"CAI","cai-notes-fs.cai.ei",21,"cai-ftp","/ftp/erbranch/EDMS/FEFO","spicysilk");
+        Branch b3 = new Branch((long) 5,"BEY","bey-notes-fs.bey.ei",21,"bey-ftp","/ftp/erbranch/EDMS/FEFO","spicysilk");
+        for (Branch br : branchConnections) {
+            // create a factory for every key containing server type, url and port
+            if (factories.get(br.getId()) == null) {
+                factories.put(br.getBranchCode(), createNewFtpSessionFactory(br));
+                LOG1.info("session factory : " + factories.toString());
+            }
+        }
+        return new DefaultSessionFactoryLocator<FTPFile>(factories,createNewFtpSessionFactory());//,defaultFtpSessionFactory);
+    }*/
+
+    @Bean
+    public SessionFactoryLocator<FTPFile> createNewFtpSessionFactoryAndAddItToTheLocator(){
+
+        final Map<Object, SessionFactory<FTPFile>> factories = new HashMap<>();
+        this.defaultSessionFactoryLocator.addSessionFactory("BEY",createNewFtpSessionFactory());
+        //factories.put("BEY",createNewFtpSessionFactory());
+
+        return this.defaultSessionFactoryLocator;
+
+    }
+}

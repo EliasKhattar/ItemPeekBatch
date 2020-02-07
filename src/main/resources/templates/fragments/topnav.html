@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.6.3/css/all.css" integrity="sha384-UHRtZLI+pbxtHCWp1t77Bi1L4ZtiqrqD80Kn4Z8NTSRyMA2Fd33n5dQ8lWUE00s/" crossorigin="anonymous">
+
+
+</head>
+<body>
+
+<div th:fragment="navbar" xmlns:th="http://www.w3.org/1999/xhtml">
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+        <a class="navbar-brand">
+            <img src="/images/logo.png">
+            </a>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <!--<a class="nav-link active" href="/branch/list">Home<span class="sr-only">(current)</span></a>-->
+                    <a class="nav-link" th:href="@{/branch/list}" th:classappend="${#request.getRequestURI() == '/branch/list' ? 'active' : ''}">Home<span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                 <!--   <a class="nav-link" href="/branch/branchform">New FTP Branch</a>-->
+                    <a class="nav-link" th:href="@{/branch/branchform}" th:classappend="${#request.getRequestURI() == '/branch/branchform' ? 'active' : ''}">New FTP Branch</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/orders/orders}" th:classappend="${#request.getRequestURI() == '/orders/orders' ? 'active' : ''}">View Orders</a>
+                </li>
+             <!--   <li class="nav-item">
+                    <a class="nav-link" th:href="@{/orders/items}" th:classappend="${#request.getRequestURI() == '/orders/items' ? 'active' : ''}">View Items</a>
+                </li>-->
+            </ul>
+
+        </div>
+
+        <a class="navbar-text navbar-right text-white">
+            FEFO Tool
+        </a>
+    </nav>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+</body>
+</html>
