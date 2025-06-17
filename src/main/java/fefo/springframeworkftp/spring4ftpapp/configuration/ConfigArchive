@@ -235,10 +235,10 @@ public class FTPIntegration {
     @Bean
     public SessionFactory<FTPFile> createNewFtpSessionFactory() {
         final DefaultFtpSessionFactory factory = new DefaultFtpSessionFactory();
-        factory.setHost("bey-notes-fs.bey.ei");
-        factory.setUsername("bey-ftp");
+        factory.setHost("bxxx");
+        factory.setUsername("xxx");
         factory.setPort(21);
-        factory.setPassword("spicysilk");
+        factory.setPassword("xxxx");
         return factory;
     }
 
@@ -317,8 +317,8 @@ public class FTPIntegration {
         final List<Branch> branchConnections = new ArrayList<>();
         branchRepository.findAll().forEach(branchConnections::add);
         final Map<Object, SessionFactory<FTPFile>> factories = new HashMap<>();
-        Branch b1 = new Branch((long) 5,"CAI","cai-notes-fs.cai.ei",21,"cai-ftp","/ftp/erbranch/EDMS/FEFO","spicysilk");
-        Branch b3 = new Branch((long) 5,"BEY","bey-notes-fs.bey.ei",21,"bey-ftp","/ftp/erbranch/EDMS/FEFO","spicysilk");
+        Branch b1 = new Branch((long) 5,"CAI","xxxx",21,"cai-ftp","/ftp/erbranch/EDMS/FEFO","xxx");
+        Branch b3 = new Branch((long) 5,"BEY","x",21,"bey-ftp","/ftp/erbranch/EDMS/FEFO","xxx");
         for (Branch br : branchConnections) {
             // create a factory for every key containing server type, url and port
             if (factories.get(br.getId()) == null) {
